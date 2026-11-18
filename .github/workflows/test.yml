@@ -1,0 +1,50 @@
+name: Plugin checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  php:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.1', '8.3', '8.4']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+      - run: find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
+      - run: php tests/unit.php
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: fixture-only
+          MARIADB_DATABASE: community_pulse_test
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysqli
+          tools: wp-cli
+          coverage: none
+      - name: Install disposable WordPress and BuddyBoss 3.8.0
+        run: |
+          mkdir /tmp/cp-wordpress
+          wp core download --path=/tmp/cp-wordpress
+          wp config create --path=/tmp/cp-wordpress --dbname=community_pulse_test --dbuser=root --dbpass=fixture-only --dbhost=127.0.0.1:3306
+          wp core install --path=/tmp/cp-wordpress --url=http://community-pulse.test --title=Test --admin_user=admin --admin_password=fixture-only --admin_email=admin@example.test --skip-email
+          wp plugin install https://github.com/buddyboss/buddyboss-platform/releases/download/3.8.0/buddyboss-platform-3.8.0.zip --activate --path=/tmp/cp-wordpress
+          wp option update bp-active-components '{"activity":1,"groups":1,"xprofile":1,"settings":1,"notifications":1}' --format=json --path=/tmp/cp-wordpress
+          wp eval 'require_once WP_PLUGIN_DIR . "/buddyboss-platform/bp-core/admin/bp-core-admin-schema.php"; bp_core_install(); bp_core_install_invitations();' --path=/tmp/cp-wordpress
+          ln -s "$GITHUB_WORKSPACE" /tmp/cp-wordpress/wp-content/plugins/buddyboss-community-pulse
+          wp plugin activate buddyboss-community-pulse --path=/tmp/cp-wordpress
+      - run: wp eval-file "$GITHUB_WORKSPACE/tests/integration.php" --path=/tmp/cp-wordpress
