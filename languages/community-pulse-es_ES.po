@@ -1,0 +1,165 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Community Pulse for BuddyBoss 0.2.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-11-20T23:45:07+00:00\n"
+"PO-Revision-Date: 2026-11-20T23:45:07+00:00\n"
+"Language: es_ES\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Domain: community-pulse\n"
+
+#. Plugin Name of the plugin
+#: community-pulse.php
+msgid "Community Pulse for BuddyBoss"
+msgstr "Community Pulse para BuddyBoss"
+
+#. Description of the plugin
+#: community-pulse.php
+msgid "Privacy-conscious monthly participation reports for public community activity."
+msgstr "Informes mensuales de participación pública en la comunidad, con cuidado de la privacidad."
+
+#. Author of the plugin
+#: community-pulse.php
+msgid "Alex Ojeda Copa"
+msgstr "Alex Ojeda Copa"
+
+#. Author URI of the plugin
+#: community-pulse.php
+msgid "https://github.com/alex-roc"
+msgstr "https://github.com/alex-roc"
+
+#: includes/class-plugin.php:44
+#: includes/class-plugin.php:76
+msgid "View report"
+msgstr "Ver informe"
+
+#: includes/class-plugin.php:51
+msgid "You cannot access this report."
+msgstr "No tienes permiso para ver este informe."
+
+#: includes/class-plugin.php:68
+msgid "Monthly public participation. Months are UTC calendar months. Only aggregate counts are shown."
+msgstr "Participación pública mensual. Los meses son meses calendario en UTC. Solo se muestran conteos agregados."
+
+#: includes/class-plugin.php:69
+msgid "Month"
+msgstr "Mes"
+
+#: includes/class-plugin.php:85
+msgid "This month is still in progress: counts are partial and will grow until the month ends (UTC)."
+msgstr "Este mes aún no termina: los conteos son parciales y seguirán creciendo hasta fin de mes (UTC)."
+
+#: includes/class-plugin.php:89
+msgid "Participation"
+msgstr "Participación"
+
+#: includes/class-plugin.php:91
+msgid "Summary hidden: fewer than 5 people posted public updates this month."
+msgstr "Resumen oculto: menos de 5 personas publicaron actualizaciones públicas este mes."
+
+#: includes/class-plugin.php:95
+msgid "Unique contributors"
+msgstr "Participantes únicos"
+
+#: includes/class-plugin.php:95
+msgid "People who posted at least one public update."
+msgstr "Personas que publicaron al menos una actualización pública."
+
+#: includes/class-plugin.php:96
+msgid "Public updates"
+msgstr "Actualizaciones públicas"
+
+#: includes/class-plugin.php:96
+msgid "Public activity updates posted (comments not included)."
+msgstr "Actualizaciones de actividad públicas (sin contar comentarios)."
+
+#: includes/class-plugin.php:97
+msgid "Contributors on 2+ days"
+msgstr "Participantes en 2 días o más"
+
+#: includes/class-plugin.php:97
+msgid "People who posted on at least two different UTC dates. Hidden if this count, or the people outside it, is under 5."
+msgstr "Personas que publicaron en al menos dos fechas UTC distintas. Se oculta si esta cifra, o las personas que quedan fuera de ella, son menos de 5."
+
+#: includes/class-plugin.php:100
+msgid "Hidden"
+msgstr "Oculto"
+
+#: includes/class-plugin.php:106
+msgid "Public groups with 5+ contributors"
+msgstr "Grupos públicos con 5 participantes o más"
+
+#: includes/class-plugin.php:108
+msgid "No public group reached 5 contributors this month."
+msgstr "Ningún grupo público llegó a 5 participantes este mes."
+
+#: includes/class-plugin.php:110
+msgid "Group"
+msgstr "Grupo"
+
+#: includes/class-plugin.php:110
+msgid "Contributors"
+msgstr "Participantes"
+
+#: includes/class-plugin.php:110
+msgid "Updates"
+msgstr "Actualizaciones"
+
+#: includes/class-plugin.php:115
+msgid "Group rows overlap: one person can post in several groups, so do not add them up to get unique contributors."
+msgstr "Las filas de grupos se superponen: una persona puede publicar en varios grupos, así que no las sumes para obtener participantes únicos."
+
+#: includes/class-plugin.php:118
+msgid "Only the first 100 qualifying groups are shown."
+msgstr "Solo se muestran los primeros 100 grupos que cumplen el criterio."
+
+#: includes/class-plugin.php:122
+msgid "Download aggregate CSV"
+msgstr "Descargar CSV agregado"
+
+#: includes/class-plugin.php:123
+msgid "What is counted"
+msgstr "Qué se cuenta"
+
+#: includes/class-plugin.php:125
+msgid "Counted: public activity updates on profiles and in public groups."
+msgstr "Se cuenta: actualizaciones de actividad públicas en perfiles y en grupos públicos."
+
+#: includes/class-plugin.php:126
+msgid "Not counted: comments, private or hidden groups, hidden or spam activity, scheduled or non-public posts, messages, reads and logins."
+msgstr "No se cuenta: comentarios, grupos privados u ocultos, actividad oculta o spam, publicaciones programadas o no públicas, mensajes, lecturas ni inicios de sesión."
+
+#: includes/class-plugin.php:127
+msgid "Any count based on fewer than 5 people is hidden. This reduces exposure but is not an anonymity guarantee."
+msgstr "Todo conteo basado en menos de 5 personas se oculta. Esto reduce la exposición, pero no garantiza el anonimato."
+
+#: includes/class-plugin.php:128
+msgid "Data is read on demand: nothing is stored and nothing is sent to external services."
+msgstr "Los datos se leen al momento: no se guarda nada ni se envía nada a servicios externos."
+
+#: includes/class-plugin.php:129
+msgid "These counts describe public posting, not readers, impact or quality of participation."
+msgstr "Estos conteos describen publicaciones públicas, no lectores, impacto ni calidad de la participación."
+
+#. translators: 1: platform name, 2: window start, 3: window end.
+#: includes/class-plugin.php:135
+#, php-format
+msgid "Source: %1$s · window %2$s to %3$s UTC (end excluded)."
+msgstr "Fuente: %1$s · ventana del %2$s al %3$s UTC (sin incluir el final)."
+
+#: includes/class-plugin.php:142
+msgid "Select one of the latest 12 UTC calendar months."
+msgstr "Elige uno de los últimos 12 meses calendario (UTC)."
+
+#: includes/class-plugin.php:145
+msgid "Activate BuddyBoss Platform or BuddyPress with the Activity and Groups components."
+msgstr "Activa BuddyBoss Platform o BuddyPress con los componentes Actividad y Grupos."
+
+#: includes/class-plugin.php:147
+msgid "Could not read community activity. Check that BuddyBoss Platform or BuddyPress is up to date."
+msgstr "No se pudo leer la actividad de la comunidad. Comprueba que BuddyBoss Platform o BuddyPress estén actualizados."

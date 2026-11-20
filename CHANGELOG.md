@@ -1,0 +1,25 @@
+# Changelog
+
+## 0.2.0 — 2026-11-20
+
+### Fixed
+- Group names with quotes, `&` or HTML entities showed stray backslashes and entities in the screen and CSV, for example `Tom \"&amp;\" Jerry`. They are now normalised the way the platform displays them.
+- CSV formula escaping now also covers cells starting with a tab or carriage return.
+
+### Changed
+- **CSV format:** new `partial_month` and `group_name` columns. `scope` is now `overall`, `group` or `note`, so a group named "overall" can no longer be confused with the total. The file starts with a UTF-8 BOM so spreadsheets keep accents.
+- The admin screen explains each indicator, flags the current month as partial, says what is and is not counted, shows the source window and platform, and formats numbers for the site locale.
+- Error messages are translatable and no longer expose internal exception text.
+
+### Added
+- Spanish translation, used by any `es_*` locale, and a `.pot` template.
+- A **View report** link in the plugins list.
+- The `community_pulse_capability` filter to let a trusted non-admin role view the report.
+- BuddyPress 14.5.6 integration-tested, locally and in CI.
+- The integration test now also posts through the real posting APIs (`bp_activity_post_update`, `groups_post_update`).
+- CI installs the packaged ZIP instead of the source tree. The packager reads the version from the plugin header.
+- A Spanish README, a screenshot, CSV column docs, troubleshooting and performance notes.
+
+## 0.1.0 — 2026-11-18
+
+- First technical prototype: monthly public-participation summary, public groups with 5+ contributors, aggregate CSV, small-cell suppression.

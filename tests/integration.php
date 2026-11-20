@@ -13,7 +13,7 @@ $date1 = gmdate('Y-m-01') . ' 12:00:00';
 $date2 = gmdate('Y-m-02') . ' 12:00:00';
 try {
     for ($i=0; $i<6; $i++) { $users[] = wp_insert_user(['user_login'=>"cp-fixture-$stamp-$i",'user_pass'=>wp_generate_password(),'user_email'=>"cp-$stamp-$i@example.test",'role'=>'subscriber']); }
-    $public = groups_create_group(['creator_id'=>$users[0],'name'=>'=Fixture public '.$stamp,'status'=>'public']);
+    $public = groups_create_group(['creator_id'=>$users[0],'name'=>'=Fixture public "quoted" & co '.$stamp,'status'=>'public']);
     $small = groups_create_group(['creator_id'=>$users[0],'name'=>'Small fixture '.$stamp,'status'=>'public']);
     $private = groups_create_group(['creator_id'=>$users[0],'name'=>'Private fixture '.$stamp,'status'=>'private']);
     $groups = [$public,$small,$private];
@@ -27,20 +27,39 @@ try {
     if (defined('BP_PLATFORM_VERSION')) {
         foreach ($users as $user) { $add($user,0,['privacy'=>'onlyme']); $add($user,0,['status'=>'scheduled']); }
     }
+    // Real posting APIs (what the activity form calls), not just bp_activity_add().
+    $api = groups_create_group(['creator_id'=>$users[0],'name'=>'API fixture '.$stamp,'status'=>'public']);
+    $apiPrivate = groups_create_group(['creator_id'=>$users[0],'name'=>'API private fixture '.$stamp,'status'=>'private']);
+    $groups[] = $api; $groups[] = $apiPrivate;
+    foreach ($users as $user) {
+        groups_join_group($api, $user); groups_join_group($apiPrivate, $user);
+        wp_set_current_user($user);
+        foreach ([groups_post_update(['content'=>'Synthetic fixture via API','group_id'=>$api,'user_id'=>$user]),
+                  groups_post_update(['content'=>'Synthetic fixture via API','group_id'=>$apiPrivate,'user_id'=>$user]),
+                  bp_activity_post_update(['content'=>'Synthetic fixture via API','user_id'=>$user])] as $id) {
+            if (!$id) { throw new RuntimeException('API post failed'); }
+            $activities[] = $id;
+        }
+    }
+    wp_set_current_user(0);
     $before = gmdate('Y-m-d H:i:s', strtotime('first day of last month UTC'));
     foreach ($users as $user) { $add($user,$public,['recorded_time'=>$before]); }
     $report = Report::fetch($month);
     if (getenv('CP_DEBUG')) { echo json_encode($report)."\n"; }
     cp_verify($report['summary']['contributors'] === 6, 'unique contributors');
-    cp_verify($report['summary']['contributions'] === 16, 'exclude spam, hidden, private groups, other months and private/scheduled posts');
+    // 6 users x (2 public-group + 1 API group + 1 API profile) + 4 posts in the small public group.
+    cp_verify($report['summary']['contributions'] === 28, 'exclude spam, hidden, private groups, other months and private/scheduled posts');
     cp_verify($report['summary']['returning'] === 6, 'recurrence on 2 UTC days');
-    cp_verify(count($report['groups']) === 1, 'omit small and private groups');
-    cp_verify((int)$report['groups'][0]['contributions'] === 12, 'public group totals');
-    cp_verify((int)$report['groups'][0]['contributors'] === 6, 'public group distinct users');
+    cp_verify(count($report['groups']) === 2, 'omit small and private groups');
+    cp_verify($report['groups'][0]['contributions'] === 12, 'public group totals');
+    cp_verify($report['groups'][0]['contributors'] === 6, 'public group distinct users');
+    cp_verify($report['groups'][0]['name'] === '=Fixture public "quoted" & co '.$stamp, 'group label shown as on the site');
+    cp_verify($report['groups'][1]['contributions'] === 6, 'API group posts counted');
+    cp_verify($report['partial'] === true, 'current month flagged partial');
     $out = fopen('php://temp','w+'); Plugin::write_csv($out,$report); rewind($out); $csv=stream_get_contents($out); fclose($out);
     cp_verify(!str_contains($csv,'Synthetic fixture'), 'no content in CSV');
     cp_verify(!str_contains($csv,'@example.test'), 'no emails in CSV');
-    cp_verify(!str_contains($csv,'Private fixture'), 'no private group names in CSV');
+    cp_verify(!str_contains($csv,'Private fixture') && !str_contains($csv,'private fixture'), 'no private group names in CSV');
     cp_verify(str_contains($csv,"'=Fixture"), 'formula-prefixed group escaped');
     $admin = get_users(['role'=>'administrator','number'=>1])[0];
     wp_set_current_user($admin->ID);
@@ -49,11 +68,16 @@ try {
     cp_verify(str_contains($html,'Download aggregate CSV'), 'admin screen renders');
     cp_verify(str_contains($html,'_wpnonce='), 'export has nonce');
     cp_verify(!str_contains($html,'Synthetic fixture'), 'screen has no post content');
+    cp_verify(!str_contains($html,'\\&quot;'), 'no stray backslashes in group names');
     // The public page callback denies a subscriber, even if called directly.
     wp_set_current_user($users[0]);
     add_filter('wp_die_handler', function() { return function($message,$title,$args) { throw new RuntimeException('denied:'.$args['response']); }; });
     try { Plugin::authorize(); throw new RuntimeException('subscriber allowed'); }
     catch (RuntimeException $e) { cp_verify($e->getMessage()==='denied:403','subscriber denied'); }
+    $cap = fn() => 'read';
+    add_filter('community_pulse_capability', $cap);
+    Plugin::authorize(); cp_verify(true, 'capability filter grants a custom role');
+    remove_filter('community_pulse_capability', $cap);
     echo $GLOBALS['cp_checks']." integration checks passed (WordPress " . get_bloginfo('version') . '; '.(defined('BP_PLATFORM_VERSION')?'BuddyBoss '.BP_PLATFORM_VERSION:'BuddyPress '.bp_get_version()).")\n";
 } finally {
     wp_set_current_user(0);

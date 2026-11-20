@@ -1,0 +1,166 @@
+# Copyright (C) 2026 Alex Ojeda Copa
+# This file is distributed under the GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Community Pulse for BuddyBoss 0.2.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/buddyboss-community-pulse\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-11-20T23:45:07+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: community-pulse\n"
+
+#. Plugin Name of the plugin
+#: community-pulse.php
+msgid "Community Pulse for BuddyBoss"
+msgstr ""
+
+#. Description of the plugin
+#: community-pulse.php
+msgid "Privacy-conscious monthly participation reports for public community activity."
+msgstr ""
+
+#. Author of the plugin
+#: community-pulse.php
+msgid "Alex Ojeda Copa"
+msgstr ""
+
+#. Author URI of the plugin
+#: community-pulse.php
+msgid "https://github.com/alex-roc"
+msgstr ""
+
+#: includes/class-plugin.php:44
+#: includes/class-plugin.php:76
+msgid "View report"
+msgstr ""
+
+#: includes/class-plugin.php:51
+msgid "You cannot access this report."
+msgstr ""
+
+#: includes/class-plugin.php:68
+msgid "Monthly public participation. Months are UTC calendar months. Only aggregate counts are shown."
+msgstr ""
+
+#: includes/class-plugin.php:69
+msgid "Month"
+msgstr ""
+
+#: includes/class-plugin.php:85
+msgid "This month is still in progress: counts are partial and will grow until the month ends (UTC)."
+msgstr ""
+
+#: includes/class-plugin.php:89
+msgid "Participation"
+msgstr ""
+
+#: includes/class-plugin.php:91
+msgid "Summary hidden: fewer than 5 people posted public updates this month."
+msgstr ""
+
+#: includes/class-plugin.php:95
+msgid "Unique contributors"
+msgstr ""
+
+#: includes/class-plugin.php:95
+msgid "People who posted at least one public update."
+msgstr ""
+
+#: includes/class-plugin.php:96
+msgid "Public updates"
+msgstr ""
+
+#: includes/class-plugin.php:96
+msgid "Public activity updates posted (comments not included)."
+msgstr ""
+
+#: includes/class-plugin.php:97
+msgid "Contributors on 2+ days"
+msgstr ""
+
+#: includes/class-plugin.php:97
+msgid "People who posted on at least two different UTC dates. Hidden if this count, or the people outside it, is under 5."
+msgstr ""
+
+#: includes/class-plugin.php:100
+msgid "Hidden"
+msgstr ""
+
+#: includes/class-plugin.php:106
+msgid "Public groups with 5+ contributors"
+msgstr ""
+
+#: includes/class-plugin.php:108
+msgid "No public group reached 5 contributors this month."
+msgstr ""
+
+#: includes/class-plugin.php:110
+msgid "Group"
+msgstr ""
+
+#: includes/class-plugin.php:110
+msgid "Contributors"
+msgstr ""
+
+#: includes/class-plugin.php:110
+msgid "Updates"
+msgstr ""
+
+#: includes/class-plugin.php:115
+msgid "Group rows overlap: one person can post in several groups, so do not add them up to get unique contributors."
+msgstr ""
+
+#: includes/class-plugin.php:118
+msgid "Only the first 100 qualifying groups are shown."
+msgstr ""
+
+#: includes/class-plugin.php:122
+msgid "Download aggregate CSV"
+msgstr ""
+
+#: includes/class-plugin.php:123
+msgid "What is counted"
+msgstr ""
+
+#: includes/class-plugin.php:125
+msgid "Counted: public activity updates on profiles and in public groups."
+msgstr ""
+
+#: includes/class-plugin.php:126
+msgid "Not counted: comments, private or hidden groups, hidden or spam activity, scheduled or non-public posts, messages, reads and logins."
+msgstr ""
+
+#: includes/class-plugin.php:127
+msgid "Any count based on fewer than 5 people is hidden. This reduces exposure but is not an anonymity guarantee."
+msgstr ""
+
+#: includes/class-plugin.php:128
+msgid "Data is read on demand: nothing is stored and nothing is sent to external services."
+msgstr ""
+
+#: includes/class-plugin.php:129
+msgid "These counts describe public posting, not readers, impact or quality of participation."
+msgstr ""
+
+#. translators: 1: platform name, 2: window start, 3: window end.
+#: includes/class-plugin.php:135
+#, php-format
+msgid "Source: %1$s · window %2$s to %3$s UTC (end excluded)."
+msgstr ""
+
+#: includes/class-plugin.php:142
+msgid "Select one of the latest 12 UTC calendar months."
+msgstr ""
+
+#: includes/class-plugin.php:145
+msgid "Activate BuddyBoss Platform or BuddyPress with the Activity and Groups components."
+msgstr ""
+
+#: includes/class-plugin.php:147
+msgid "Could not read community activity. Check that BuddyBoss Platform or BuddyPress is up to date."
+msgstr ""

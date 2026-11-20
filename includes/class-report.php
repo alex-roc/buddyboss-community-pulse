@@ -2,6 +2,9 @@
 namespace AlexROC\CommunityPulse;
 defined('ABSPATH') || exit;
 
+/** Raised when BuddyBoss Platform/BuddyPress or a required component is inactive. */
+final class PlatformMissing extends \RuntimeException {}
+
 /** Monthly, fixed-window aggregate queries. No personal rows leave the database. */
 final class Report {
     const THRESHOLD = 5;
@@ -37,9 +40,26 @@ final class Report {
         return $value;
     }
 
+    /**
+     * Turn a stored group name into plain text, the way the platform displays it.
+     * BuddyBoss/BuddyPress store names slashed and entity-encoded and apply
+     * stripslashes and html_entity_decode on output (bp_get_group_name).
+     */
+    public static function group_label(string $raw): string {
+        $plain = html_entity_decode(strip_tags(stripslashes($raw)), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        return trim(preg_replace('/\s+/u', ' ', $plain) ?? $plain);
+    }
+
+    /** True when the month has not finished yet (UTC), so its counts are partial. */
+    public static function is_partial(string $month, ?\DateTimeImmutable $now = null): bool {
+        $now = ($now ?? new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->setTimezone(new \DateTimeZone('UTC'));
+        return $month === $now->format('Y-m');
+    }
+
     /** Prevent spreadsheet formula interpretation of labels in CSV exports. */
     public static function csv_label(string $label): string {
-        return preg_match('/^[\s]*[=+@\-]/u', $label) ? "'" . $label : $label;
+        // OWASP CSV injection: leading = + - @, or a leading tab/carriage return.
+        return preg_match('/^(?:[\t\r]|\s*[=+@\-])/u', $label) ? "'" . $label : $label;
     }
 
     /** Query a BuddyBoss/BuddyPress activity table and public groups only. */
@@ -47,7 +67,7 @@ final class Report {
         global $wpdb;
         [$start, $end] = self::window($month);
         if (!function_exists('bp_is_active') || !bp_is_active('activity') || !bp_is_active('groups')) {
-            throw new \RuntimeException('Activate BuddyBoss Platform or BuddyPress with Activity and Groups.');
+            throw new PlatformMissing('Activate BuddyBoss Platform or BuddyPress with Activity and Groups.');
         }
         $bp = buddypress();
         $activity = $bp->activity->table_name;
@@ -83,8 +103,13 @@ final class Report {
         if ($wpdb->last_error || !is_array($rows)) {
             throw new \RuntimeException('Could not query public groups.');
         }
-        return ['month' => $month, 'summary' => self::protect($summary),
-            'groups' => array_slice($rows, 0, 100), 'truncated' => count($rows) > 100,
+        $groups = array_map(static fn(array $row): array => [
+            'name' => self::group_label((string) $row['name']),
+            'contributors' => (int) $row['contributors'],
+            'contributions' => (int) $row['contributions'],
+        ], array_slice($rows, 0, 100));
+        return ['month' => $month, 'start' => $start, 'end' => $end, 'partial' => self::is_partial($month),
+            'summary' => self::protect($summary), 'groups' => $groups, 'truncated' => count($rows) > 100,
             'platform' => $buddyboss ? 'BuddyBoss Platform' : 'BuddyPress'];
     }
 }
