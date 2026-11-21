@@ -1,4 +1,4 @@
-# Validation record — 0.2.0
+# Validation record — 0.3.0
 
 Date: 2026-11-20. Synthetic fixtures only. No client or production data was used.
 
@@ -11,37 +11,49 @@ Date: 2026-11-20. Synthetic fixtures only. No client or production data was used
 | MariaDB | 11.4.13, private Unix socket, networking disabled |
 | WP-CLI | 2.12.0 |
 
+The environment was built from scratch with `scripts/dev-env.sh up`.
+
 ## Executed locally
 
 - PHP syntax check on every PHP file: passed.
-- `php tests/unit.php`: **32 checks passed**.
-- `wp eval-file tests/integration.php` on **BuddyBoss Platform 3.8.0**: **19 checks passed**.
-- The same test on **BuddyPress 14.5.6**, with the plugin installed from the **packaged ZIP**: **19 checks passed**.
-- **Browser session**, logged in as administrator on the PHP built-in server: the report screen rendered, the CSV downloaded with `text/csv`, an attachment filename and a UTF-8 BOM, a tampered nonce returned **403**, and the plugins list showed the **View report** link.
-- **Translation:** the screen rendered in Spanish for `es_ES` and, through the fallback, for `es_MX` and `es_BO`.
-- **Load:** with 600,000 synthetic activity rows (20,000 users, 300 groups, 11 months), `Report::fetch()` for one month took **0.75 s**.
+- `php tests/unit.php`: **52 checks passed**.
+- `tests/integration.php` on **BuddyBoss Platform 3.8.0**: **37 checks passed**.
+- The same test on **BuddyPress 14.5.6**, from the symlinked source and again with the plugin installed from the **packaged ZIP**: **37 checks passed** both times.
+- **Uninstall:** `wp plugin uninstall` removed the `community_pulse_snapshots` option.
+- **Fresh install:** after the dev environment ran BuddyBoss's installer, running `admin_init` and `bp_admin_init` no longer switched the Groups component off.
+- **Browser**, logged in as administrator on the PHP built-in server with a synthetic 12-month community (691 people, 4,434 updates, 5 groups):
+  - the monthly report, trend chart and table, and public-reports tab rendered;
+  - the print stylesheet hid the admin chrome;
+  - a page with `[community_pulse]` and `[community_pulse view="history"]` showed the published snapshots, rounded, on Twenty Twenty-Five.
 
-The integration test covers:
-- distinct contributors and recurrence across UTC days;
-- exclusion of spam, hidden activity, private groups, private and scheduled posts, and posts from other months;
-- small-group suppression;
-- posts made through the real posting APIs (`bp_activity_post_update`, `groups_post_update`) in public and private groups;
-- group names with quotes, `&` and a formula prefix, shown as on the site and escaped in the CSV;
-- the partial-month flag;
-- a CSV with no post content or emails;
-- the admin screen and its export nonce;
-- denial of a subscriber, and the `community_pulse_capability` filter.
+  The screenshots in `docs/screenshots/` come from this session.
+- **Translation:** every screen rendered in Spanish with the admin user locale set to `es_ES`. In 0.2.0, the `es_MX` and `es_BO` fallback was checked too.
+- **Load:** on 600,000 synthetic activity rows (20,000 users, 300 groups, about 2 years), `Report::fetch()` for one month took **0.97 s** and `Report::trend()` for 12 months took **1.36 s**.
 
-The unit checks cover:
-- calendar range and rejection of invalid input;
-- summary suppression, small recurring cohorts and their complements;
-- formula escaping, including leading tab and carriage return;
-- group-label normalisation and the partial-month flag;
-- the CSV header, BOM, suppression values, the group/overall distinction and the truncation note.
+### What the integration test covers
 
-## Finding during validation (fixed in 0.2.0)
+- **Every indicator:** distinct contributors, updates, 2+ days, retained from the previous month, and first-time contributors. A spam post in a newcomer's history does not count as prior participation.
+- **Exclusions:** spam, hidden activity, private groups, private and scheduled posts, and other months.
+- **Real posting APIs:** `bp_activity_post_update` and `groups_post_update`.
+- **Trend:** the 12-month view agrees with the monthly report.
+- **Threshold filter:** raising it suppresses, and values under 5 are ignored.
+- **Output content:** the CSV and screens hold no post content, emails or private group names, and formula-like names are escaped.
+- **Admin screens:** the report and trend tabs render, and the export link carries a nonce.
+- **Public reports:**
+  - partial months are rejected;
+  - snapshots stay frozen when new activity arrives;
+  - the shortcode renders summary, history and rounded variants, and renders nothing for unpublished months;
+  - unpublishing deletes the option.
+- **Permissions:** subscribers are denied both the report and publishing, and the capability filter grants a custom role.
 
-BuddyBoss and BuddyPress store group names slashed and entity-encoded. 0.1.0 printed the raw value, so a group called `Tom "&" Jerry` appeared with backslashes in the screen and CSV. 0.2.0 normalises names the way the platform displays them.
+### What the unit tests cover
+
+- the month window and the selectable months;
+- suppression, including both retention complements, first-time complements and raised thresholds;
+- formula escaping and group-label normalisation;
+- the monthly and 12-month CSV writers;
+- snapshot building, rounding to 5, and suppressed months publishing nothing;
+- that the version header matches `COMMUNITY_PULSE_VERSION`.
 
 ## Limits
 
@@ -49,8 +61,9 @@ These have not been validated:
 - BuddyBoss Theme and BuddyBoss Pro;
 - multisite;
 - real production traffic;
-- BuddyBoss versions other than 3.8.0.
+- BuddyBoss versions other than 3.8.0;
+- MySQL locally. CI covers MySQL 8.4.
 
-The fixed five-person threshold reduces exposure. It does not guarantee anonymity.
+Suppression, rounding and frozen snapshots reduce exposure. They do not guarantee anonymity: see [docs/privacy-model.md](docs/privacy-model.md).
 
-CI runs syntax and unit checks on PHP 8.1, 8.3 and 8.4. It also runs the integration test for BuddyBoss 3.8.0 and current BuddyPress on PHP 8.3 with MariaDB, installing the packaged ZIP. A configured workflow is not itself a passing run: see the repository's Actions results.
+CI runs syntax and unit checks on PHP 8.1, 8.3 and 8.4. It also runs the integration test for BuddyBoss 3.8.0 and current BuddyPress on PHP 8.3 with MariaDB 11.4, plus BuddyBoss on MySQL 8.4, installing the packaged ZIP. A configured workflow is not itself a passing run: see the repository's Actions results.
