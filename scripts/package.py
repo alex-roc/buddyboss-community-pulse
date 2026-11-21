@@ -15,9 +15,9 @@ if not match:
     sys.exit('Version header not found in community-pulse.php')
 version = match.group(1)
 
-files = ['community-pulse.php', 'includes/class-report.php', 'includes/class-plugin.php',
-         'README.md', 'README.es.md', 'CHANGELOG.md', 'LICENSE', 'VALIDATION.md']
-files += sorted(str(p.relative_to(root)) for p in (root / 'languages').iterdir() if p.is_file())
+files = ['community-pulse.php', 'uninstall.php', 'README.md', 'README.es.md', 'CHANGELOG.md', 'LICENSE', 'VALIDATION.md']
+for folder in ('includes', 'assets', 'languages'):
+    files += sorted(str(p.relative_to(root)) for p in (root / folder).iterdir() if p.is_file() and not p.name.startswith('.'))
 
 out = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else root / 'dist')
 out.mkdir(parents=True, exist_ok=True)

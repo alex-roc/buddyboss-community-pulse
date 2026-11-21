@@ -21,17 +21,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [buddyboss, buddypress]
+        include:
+          - { platform: buddyboss, db: 'mariadb:11.4', health: 'healthcheck.sh --connect --innodb_initialized' }
+          - { platform: buddypress, db: 'mariadb:11.4', health: 'healthcheck.sh --connect --innodb_initialized' }
+          - { platform: buddyboss, db: 'mysql:8.4', health: 'mysqladmin ping -h 127.0.0.1 -pfixture-only' }
+    name: integration (${{ matrix.platform }}, ${{ matrix.db }})
     services:
-      mariadb:
-        image: mariadb:11.4
+      database:
+        image: ${{ matrix.db }}
         env:
           MARIADB_ROOT_PASSWORD: fixture-only
           MARIADB_DATABASE: community_pulse_test
+          MYSQL_ROOT_PASSWORD: fixture-only
+          MYSQL_DATABASE: community_pulse_test
         ports: ['3306:3306']
         options: >-
-          --health-cmd="healthcheck.sh --connect --innodb_initialized"
-          --health-interval=10s --health-timeout=5s --health-retries=10
+          --health-cmd="${{ matrix.health }}"
+          --health-interval=10s --health-timeout=5s --health-retries=15
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -50,6 +56,7 @@ jobs:
           wp core install --path=/tmp/cp-wordpress --url=http://community-pulse.test --title=Test --admin_user=admin --admin_password=fixture-only --admin_email=admin@example.test --skip-email
           if [ "${{ matrix.platform }}" = buddyboss ]; then
             wp plugin install https://github.com/buddyboss/buddyboss-platform/releases/download/3.8.0/buddyboss-platform-3.8.0.zip --activate --path=/tmp/cp-wordpress
+            wp eval 'bp_version_updater();' --path=/tmp/cp-wordpress
             wp option update bp-active-components '{"activity":1,"groups":1,"xprofile":1,"settings":1,"notifications":1}' --format=json --path=/tmp/cp-wordpress
             wp eval 'require_once WP_PLUGIN_DIR . "/buddyboss-platform/bp-core/admin/bp-core-admin-schema.php"; bp_core_install(); bp_core_install_invitations();' --path=/tmp/cp-wordpress
           else

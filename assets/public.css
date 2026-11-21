@@ -1,0 +1,15 @@
+/* Community Pulse public report: inherits the theme's fonts and colours. */
+.community-pulse { margin: 1.5em 0; }
+.community-pulse-title { font-weight: 700; font-size: 1.15em; margin: 0 0 .75em; }
+.community-pulse-figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .75rem; margin: 0 0 1em; }
+.community-pulse-figures > div { border: 1px solid color-mix(in srgb, currentColor 18%, transparent); border-radius: 6px; padding: .75rem 1rem; display: flex; flex-direction: column; justify-content: flex-start; }
+.community-pulse-figures dt { font-size: .85em; opacity: .8; margin: 0; }
+.community-pulse-figures dd { order: -1; font-size: 1.9em; font-weight: 700; line-height: 1.1; margin: 0 0 .15em; font-variant-numeric: tabular-nums; }
+.community-pulse table { width: 100%; border-collapse: collapse; margin: 0 0 1em; font-variant-numeric: tabular-nums; }
+.community-pulse caption { text-align: left; font-weight: 600; padding-bottom: .4em; }
+.community-pulse th, .community-pulse td { text-align: left; padding: .4em .6em; border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent); }
+.community-pulse td { text-align: right; }
+.community-pulse td:first-child { text-align: left; }
+.community-pulse thead th:not(:first-child) { text-align: right; }
+.community-pulse-note { font-size: .85em; opacity: .75; }
+@media print { .community-pulse-figures > div { break-inside: avoid; } }

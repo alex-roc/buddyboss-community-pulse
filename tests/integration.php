@@ -1,7 +1,11 @@
 <?php
 /** Run against a disposable WordPress + BuddyBoss/BuddyPress database with wp eval-file. */
-use AlexROC\CommunityPulse\Report;
+use AlexROC\CommunityPulse\Admin;
+use AlexROC\CommunityPulse\Csv;
 use AlexROC\CommunityPulse\Plugin;
+use AlexROC\CommunityPulse\PublicReport;
+use AlexROC\CommunityPulse\Report;
+use AlexROC\CommunityPulse\Snapshots;
 if (!function_exists('bp_activity_add') || !function_exists('groups_create_group')) { throw new RuntimeException('Activity and Groups required'); }
 $GLOBALS['cp_checks'] = 0;
 function cp_verify($truth, $message) { $GLOBALS['cp_checks']++; if (!$truth) { throw new RuntimeException($message); } }
@@ -11,27 +15,33 @@ $stamp = bin2hex(random_bytes(4));
 $month = gmdate('Y-m');
 $date1 = gmdate('Y-m-01') . ' 12:00:00';
 $date2 = gmdate('Y-m-02') . ' 12:00:00';
+$lastMonth = gmdate('Y-m', strtotime('first day of last month UTC'));
+$savedSnapshots = get_option(Snapshots::OPTION, null);
+delete_option(Snapshots::OPTION);
 try {
-    for ($i=0; $i<6; $i++) { $users[] = wp_insert_user(['user_login'=>"cp-fixture-$stamp-$i",'user_pass'=>wp_generate_password(),'user_email'=>"cp-$stamp-$i@example.test",'role'=>'subscriber']); }
+    for ($i=0; $i<12; $i++) { $users[] = wp_insert_user(['user_login'=>"cp-fixture-$stamp-$i",'user_pass'=>wp_generate_password(),'user_email'=>"cp-$stamp-$i@example.test",'role'=>'subscriber']); }
     $public = groups_create_group(['creator_id'=>$users[0],'name'=>'=Fixture public "quoted" & co '.$stamp,'status'=>'public']);
     $small = groups_create_group(['creator_id'=>$users[0],'name'=>'Small fixture '.$stamp,'status'=>'public']);
     $private = groups_create_group(['creator_id'=>$users[0],'name'=>'Private fixture '.$stamp,'status'=>'private']);
     $groups = [$public,$small,$private];
+    // Users 0-5 are regulars (posted last month too); users 6-11 post for the first time this month.
+    $regulars = array_slice($users, 0, 6); $newcomers = array_slice($users, 6);
     $add = function($user, $group = 0, $options = []) use (&$activities,$date1) {
         $id = bp_activity_add(array_merge(['user_id'=>$user,'component'=>$group?'groups':'activity','type'=>'activity_update','item_id'=>$group,'content'=>'Synthetic fixture text must never be exported','recorded_time'=>$date1,'hide_sitewide'=>false,'privacy'=>'public'], $options));
         if (!$id) { throw new RuntimeException('Could not seed activity'); }
         $activities[] = $id; return $id;
     };
-    foreach ($users as $user) { $add($user,$public); $add($user,$public,['recorded_time'=>$date2]); $add($user,$private); $add($user,0,['hide_sitewide'=>true]); $add($user,0,['is_spam'=>true]); }
+    foreach ($newcomers as $user) { $add($user); }
+    foreach ($regulars as $user) { $add($user,$public); $add($user,$public,['recorded_time'=>$date2]); $add($user,$private); $add($user,0,['hide_sitewide'=>true]); $add($user,0,['is_spam'=>true]); }
     for ($i=0; $i<4; $i++) { $add($users[$i],$small); }
     if (defined('BP_PLATFORM_VERSION')) {
-        foreach ($users as $user) { $add($user,0,['privacy'=>'onlyme']); $add($user,0,['status'=>'scheduled']); }
+        foreach ($regulars as $user) { $add($user,0,['privacy'=>'onlyme']); $add($user,0,['status'=>'scheduled']); }
     }
     // Real posting APIs (what the activity form calls), not just bp_activity_add().
     $api = groups_create_group(['creator_id'=>$users[0],'name'=>'API fixture '.$stamp,'status'=>'public']);
     $apiPrivate = groups_create_group(['creator_id'=>$users[0],'name'=>'API private fixture '.$stamp,'status'=>'private']);
     $groups[] = $api; $groups[] = $apiPrivate;
-    foreach ($users as $user) {
+    foreach ($regulars as $user) {
         groups_join_group($api, $user); groups_join_group($apiPrivate, $user);
         wp_set_current_user($user);
         foreach ([groups_post_update(['content'=>'Synthetic fixture via API','group_id'=>$api,'user_id'=>$user]),
@@ -43,37 +53,84 @@ try {
     }
     wp_set_current_user(0);
     $before = gmdate('Y-m-d H:i:s', strtotime('first day of last month UTC'));
-    foreach ($users as $user) { $add($user,$public,['recorded_time'=>$before]); }
+    foreach ($regulars as $user) { $add($user,$public,['recorded_time'=>$before]); }
+    // A newcomer's hidden or spam post last month must not make them "returning".
+    $add($newcomers[0],0,['recorded_time'=>$before,'is_spam'=>true]);
     $report = Report::fetch($month);
     if (getenv('CP_DEBUG')) { echo json_encode($report)."\n"; }
-    cp_verify($report['summary']['contributors'] === 6, 'unique contributors');
-    // 6 users x (2 public-group + 1 API group + 1 API profile) + 4 posts in the small public group.
-    cp_verify($report['summary']['contributions'] === 28, 'exclude spam, hidden, private groups, other months and private/scheduled posts');
+    cp_verify($report['summary']['contributors'] === 12, 'unique contributors');
+    // 6 regulars x (2 public-group + 1 API group + 1 API profile) + 4 small-group posts + 6 newcomer posts.
+    cp_verify($report['summary']['contributions'] === 34, 'exclude spam, hidden, private groups, other months and private/scheduled posts');
     cp_verify($report['summary']['returning'] === 6, 'recurrence on 2 UTC days');
+    cp_verify($report['summary']['retained'] === 6, 'retained from previous month');
+    cp_verify($report['summary']['new'] === 6, 'first-time contributors (spam history ignored)');
     cp_verify(count($report['groups']) === 2, 'omit small and private groups');
     cp_verify($report['groups'][0]['contributions'] === 12, 'public group totals');
     cp_verify($report['groups'][0]['contributors'] === 6, 'public group distinct users');
     cp_verify($report['groups'][0]['name'] === '=Fixture public "quoted" & co '.$stamp, 'group label shown as on the site');
     cp_verify($report['groups'][1]['contributions'] === 6, 'API group posts counted');
     cp_verify($report['partial'] === true, 'current month flagged partial');
-    $out = fopen('php://temp','w+'); Plugin::write_csv($out,$report); rewind($out); $csv=stream_get_contents($out); fclose($out);
+
+    // Trend: same numbers for this month, and last month on its own.
+    $trend = Report::trend();
+    $tm = array_column($trend['months'], null, 'month');
+    cp_verify(count($trend['months']) === 12 && array_key_last($tm) === $month, '12 months, oldest first');
+    cp_verify($tm[$month]['contributors'] === 12 && $tm[$month]['new'] === 6 && $tm[$month]['retained'] === 6, 'trend matches monthly report');
+    cp_verify($tm[$lastMonth]['contributors'] === 6 && $tm[$lastMonth]['contributions'] === 6, 'trend counts the previous month');
+
+    // Configurable threshold: can be raised, never lowered below 5.
+    $k = fn() => 13; add_filter('community_pulse_threshold', $k);
+    cp_verify(Report::fetch($month)['summary']['suppressed'] === true, 'raised threshold suppresses');
+    remove_filter('community_pulse_threshold', $k);
+    $k = fn() => 2; add_filter('community_pulse_threshold', $k);
+    cp_verify(Report::threshold() === 5, 'threshold cannot go below 5');
+    remove_filter('community_pulse_threshold', $k);
+
+    $out = fopen('php://temp','w+'); Csv::monthly($out,$report); rewind($out); $csv=stream_get_contents($out); fclose($out);
     cp_verify(!str_contains($csv,'Synthetic fixture'), 'no content in CSV');
     cp_verify(!str_contains($csv,'@example.test'), 'no emails in CSV');
     cp_verify(!str_contains($csv,'Private fixture') && !str_contains($csv,'private fixture'), 'no private group names in CSV');
     cp_verify(str_contains($csv,"'=Fixture"), 'formula-prefixed group escaped');
+
     $admin = get_users(['role'=>'administrator','number'=>1])[0];
     wp_set_current_user($admin->ID);
-    $_GET['month']=$month;
-    ob_start(); Plugin::page(); $html=ob_get_clean();
+    $_GET = ['page'=>'community-pulse','month'=>$month];
+    ob_start(); Admin::page(); $html=ob_get_clean();
     cp_verify(str_contains($html,'Download aggregate CSV'), 'admin screen renders');
     cp_verify(str_contains($html,'_wpnonce='), 'export has nonce');
     cp_verify(!str_contains($html,'Synthetic fixture'), 'screen has no post content');
     cp_verify(!str_contains($html,'\\&quot;'), 'no stray backslashes in group names');
-    // The public page callback denies a subscriber, even if called directly.
+    $_GET = ['page'=>'community-pulse','tab'=>'trend'];
+    ob_start(); Admin::page(); $html=ob_get_clean();
+    cp_verify(str_contains($html,'<svg') && str_contains($html,'Download 12-month CSV'), 'trend tab renders chart and export');
+
+    // Public reports: only finished months, frozen, rendered from the snapshot.
+    try { Snapshots::publish($month, false, false); cp_verify(false, 'partial month published'); }
+    catch (InvalidArgumentException $e) { cp_verify(true, 'partial month cannot be published'); }
+    Snapshots::publish($lastMonth, true, false);
+    $frozen = Snapshots::get($lastMonth);
+    cp_verify($frozen['summary']['contributors'] === 6 && $frozen['groups'][0]['contributors'] === 6, 'snapshot stores protected figures');
+    $add($users[11], 0, ['recorded_time'=>$before]);
+    cp_verify(Snapshots::get($lastMonth)['summary']['contributors'] === 6, 'snapshot does not change with new activity');
+    wp_set_current_user(0);
+    $public_html = do_shortcode('[community_pulse month="'.$lastMonth.'"]');
+    cp_verify(str_contains($public_html,'community-pulse-figures') && str_contains($public_html,'>6<'), 'shortcode renders the snapshot');
+    cp_verify(!str_contains($public_html,'Synthetic') && !str_contains($public_html,'@example'), 'public output has no content or emails');
+    cp_verify(str_contains(do_shortcode('[community_pulse view="history"]'),'community-pulse-history'), 'history view renders');
+    cp_verify(do_shortcode('[community_pulse month="2001-01"]') === '', 'unpublished month renders nothing for visitors');
+    Snapshots::publish($lastMonth, false, true);
+    $rounded = do_shortcode('[community_pulse]');
+    cp_verify(str_contains($rounded,'>5<') && str_contains($rounded,'nearest 5') && !str_contains($rounded,'community-pulse-groups'), 'rounded snapshot without groups');
+    Snapshots::unpublish($lastMonth);
+    cp_verify(do_shortcode('[community_pulse]') === '' && get_option(Snapshots::OPTION, null) === null, 'unpublish removes it');
+
+    // Permissions.
     wp_set_current_user($users[0]);
     add_filter('wp_die_handler', function() { return function($message,$title,$args) { throw new RuntimeException('denied:'.$args['response']); }; });
     try { Plugin::authorize(); throw new RuntimeException('subscriber allowed'); }
     catch (RuntimeException $e) { cp_verify($e->getMessage()==='denied:403','subscriber denied'); }
+    try { Admin::publish(); throw new RuntimeException('subscriber published'); }
+    catch (RuntimeException $e) { cp_verify($e->getMessage()==='denied:403','subscriber cannot publish'); }
     $cap = fn() => 'read';
     add_filter('community_pulse_capability', $cap);
     Plugin::authorize(); cp_verify(true, 'capability filter grants a custom role');
@@ -81,6 +138,7 @@ try {
     echo $GLOBALS['cp_checks']." integration checks passed (WordPress " . get_bloginfo('version') . '; '.(defined('BP_PLATFORM_VERSION')?'BuddyBoss '.BP_PLATFORM_VERSION:'BuddyPress '.bp_get_version()).")\n";
 } finally {
     wp_set_current_user(0);
+    $savedSnapshots === null ? delete_option(Snapshots::OPTION) : update_option(Snapshots::OPTION, $savedSnapshots, false);
     foreach ($activities as $id) { bp_activity_delete(['id'=>$id]); }
     foreach ($groups as $id) { groups_delete_group($id); }
     require_once ABSPATH . 'wp-admin/includes/user.php';
