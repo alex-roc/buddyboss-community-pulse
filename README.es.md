@@ -4,13 +4,11 @@
 
 ![Tendencia de 12 meses en español](docs/screenshots/trend-es.png)
 
-**Estado: 0.3.0, versión temprana.** Tiene pruebas de integración con BuddyBoss Platform 3.8.0 y BuddyPress 14.5.6 (ver [VALIDATION.md](VALIDATION.md)). Pruébalo primero en una copia de staging. Lo creó Alex Ojeda Copa en noviembre de 2026 y no está afiliado a BuddyBoss ni a BuddyPress.
-
 Hay documentación más detallada en inglés: [guía de uso](docs/user-guide.md), [modelo de privacidad](docs/privacy-model.md) y [guía para desarrolladores](docs/developer.md).
 
 ## Qué hace
 
-La mayoría de las analíticas de comunidad siguen a cada persona: quién entró, quién publica más, rankings de miembros. Community Pulse responde las preguntas de quienes gestionan la comunidad, de un directorio o de quienes financian, **solo con datos agregados**.
+Todo se calcula **solo con datos agregados**, nunca por persona.
 
 En **Herramientas → Community Pulse** hay tres pestañas:
 
@@ -45,7 +43,7 @@ El umbral **reduce la exposición, pero no garantiza el anonimato**. Quien admin
 
 ## Requisitos e instalación
 
-1. WordPress 6.6 o superior y PHP 8.1 o superior, con BuddyBoss Platform o BuddyPress y los componentes **Actividad** y **Grupos** activos.
+1. WordPress 6.6 o superior y PHP 8.1 o superior, con BuddyBoss Platform o BuddyPress y los componentes **Actividad** y **Grupos** activos. Está probado con BuddyBoss Platform 3.8.0 y BuddyPress 14.5.6 ([VALIDATION.md](VALIDATION.md)).
 2. Descarga `buddyboss-community-pulse-<versión>.zip` desde [Releases](https://github.com/alex-roc/buddyboss-community-pulse/releases).
 3. Entra a **Plugins → Añadir nuevo plugin → Subir plugin**, sube el ZIP y pulsa **Activar**.
 4. Abre **Herramientas → Community Pulse**.
@@ -95,4 +93,4 @@ Si el sitio o tu perfil están en cualquier variante de español (`es_ES`, `es_M
 
 ## Licencia
 
-GPL-2.0-or-later. © 2026 Alex Ojeda Copa. Sin garantía. Valídalo en staging antes de usarlo en producción.
+GPL-2.0-or-later. © 2026 Alex Ojeda Copa.

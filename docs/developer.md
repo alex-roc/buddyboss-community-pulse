@@ -86,7 +86,8 @@ Requirements: PHP 8.1+, MariaDB (server and client) and curl. It takes about 900
 
 Gotchas the script already handles:
 - On macOS, Unix socket paths must stay under 104 characters, so the socket lives in `$TMPDIR`.
-- BuddyBoss's installer resets the component list to its defaults, without Groups, the first time it runs. The script runs it explicitly (`bp_version_updater()`) before enabling Groups. Otherwise the first wp-admin visit would switch Groups off.
+- BuddyBoss 3.x stores active components in `bb-active-features` and re-syncs `bp-active-components` from it on wp-admin requests. Setting only `bp-active-components` (as many guides suggest) works under WP-CLI, but the first admin visit switches Groups off again. The script writes both options, and runs BuddyBoss's installer (`bp_version_updater()`) first.
+- `scripts/dev-env.sh demo` seeds a synthetic 12-month community and a public page for screenshots. After seeding, the integration test fails, because it needs empty months. Use a fresh environment for tests.
 
 ## Tests
 

@@ -90,7 +90,7 @@ final class Admin {
             .community-pulse-admin .cp-publish th[scope=row]{white-space:nowrap;width:6em}
             .community-pulse-admin .cp-publish td{vertical-align:middle}
             .community-pulse-admin .cp-publish form{display:flex;gap:1em;align-items:center;flex-wrap:wrap;margin:0}
-            @media print{#adminmenumain,#wpadminbar,#wpfooter,.cp-noprint,.notice,.update-nag{display:none!important}
+            @media print{#adminmenumain,#wpadminbar,#wpfooter,.cp-noprint,.notice:not(.inline),.updated,.error:not(.inline),.update-nag{display:none!important}
               #wpcontent,#wpbody-content{margin:0!important;padding:0!important}html.wp-toolbar{padding:0!important}
               html,body,#wpwrap,#wpcontent{background:#fff!important}}
         </style>';

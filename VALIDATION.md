@@ -20,7 +20,7 @@ The environment was built from scratch with `scripts/dev-env.sh up`.
 - `tests/integration.php` on **BuddyBoss Platform 3.8.0**: **37 checks passed**.
 - The same test on **BuddyPress 14.5.6**, from the symlinked source and again with the plugin installed from the **packaged ZIP**: **37 checks passed** both times.
 - **Uninstall:** `wp plugin uninstall` removed the `community_pulse_snapshots` option.
-- **Fresh install:** after the dev environment ran BuddyBoss's installer, running `admin_init` and `bp_admin_init` no longer switched the Groups component off.
+- **Fresh install:** with Groups enabled in both `bb-active-features` and `bp-active-components`, running `admin_init` and `bp_admin_init` and visiting wp-admin in a browser no longer switched Groups off.
 - **Browser**, logged in as administrator on the PHP built-in server with a synthetic 12-month community (691 people, 4,434 updates, 5 groups):
   - the monthly report, trend chart and table, and public-reports tab rendered;
   - the print stylesheet hid the admin chrome;
@@ -66,4 +66,4 @@ These have not been validated:
 
 Suppression, rounding and frozen snapshots reduce exposure. They do not guarantee anonymity: see [docs/privacy-model.md](docs/privacy-model.md).
 
-CI runs syntax and unit checks on PHP 8.1, 8.3 and 8.4. It also runs the integration test for BuddyBoss 3.8.0 and current BuddyPress on PHP 8.3 with MariaDB 11.4, plus BuddyBoss on MySQL 8.4, installing the packaged ZIP. A configured workflow is not itself a passing run: see the repository's Actions results.
+CI runs syntax and unit checks on PHP 8.1, 8.3 and 8.4. It also runs the integration test for BuddyBoss 3.8.0 and current BuddyPress on PHP 8.3 with MariaDB 11.4, plus BuddyBoss on MySQL 8.4, installing the packaged ZIP.

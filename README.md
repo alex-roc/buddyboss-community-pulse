@@ -6,18 +6,16 @@
 
 ![12-month trend in Community Pulse](docs/screenshot.png)
 
-**Status: 0.3.0, early release.** It is integration-tested on BuddyBoss Platform 3.8.0 and BuddyPress 14.5.6 (see [VALIDATION.md](VALIDATION.md)). Try it on a staging copy first. Created in November 2026 by Alex Ojeda Copa. It is not affiliated with BuddyBoss or BuddyPress.
+## What it does
 
-## Why another analytics plugin?
-
-Most community analytics track individuals: who logged in, who posted most, leaderboards of members. Community Pulse answers the questions community managers, boards and funders actually ask, using **aggregates only**:
+Everything is computed from **aggregates only**, never per-person data:
 
 - **Monthly report:** unique contributors, public updates, contributors on 2+ days, people **retained** from the previous month, **first-time** contributors, and public groups with real conversation.
 - **12-month trend:** an accessible chart and table to see growth, retention and newcomers over time.
 - **Public reports:** publish a finished month as a frozen, rounded snapshot and show it on any page with `[community_pulse]`. It works for transparency pages, annual reports and funder updates.
 - **Exports:** CSV files that open with accents intact and are safe from formula injection, plus a print view to save as PDF.
 
-Privacy is built in rather than added later:
+Privacy:
 
 - every figure describes at least 5 people;
 - sub-counts whose complement is small are hidden too;
@@ -38,6 +36,8 @@ See the [privacy model](docs/privacy-model.md) for what this protects against an
 - WordPress 6.6 or newer and PHP 8.1 or newer.
 - **BuddyBoss Platform**, or **BuddyPress**, with the **Activity** and **Groups** components enabled.
 - No BuddyBoss Pro, theme, API key, SaaS account, build step or extra database tables.
+
+Tested with BuddyBoss Platform 3.8.0 and BuddyPress 14.5.6, on MariaDB 11.4 and MySQL 8.4 ([VALIDATION.md](VALIDATION.md)).
 
 ## Installation
 
@@ -81,4 +81,4 @@ See the [developer guide](docs/developer.md) for the architecture, queries, hook
 
 ## License
 
-GPL-2.0-or-later. Copyright 2026 Alex Ojeda Copa. No warranty. Validate on staging before deploying.
+GPL-2.0-or-later. Copyright 2026 Alex Ojeda Copa.

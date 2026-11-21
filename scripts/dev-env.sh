@@ -5,6 +5,8 @@
 #   scripts/dev-env.sh wp <args>     run WP-CLI on the BuddyBoss site   (WP_SITE=bp for BuddyPress)
 #   scripts/dev-env.sh db [args]      MariaDB client on the dev database (e.g. db -e 'SELECT 1')
 #   scripts/dev-env.sh serve [port]  serve the BuddyBoss site on http://127.0.0.1:<port> (default 8765)
+#   scripts/dev-env.sh demo          seed a synthetic 12-month community + public page (for screenshots;
+#                                    the integration test then fails: it needs empty months, use a fresh env)
 #   scripts/dev-env.sh test          unit + integration tests on both sites
 #   scripts/dev-env.sh down          stop MariaDB and delete the stack
 #
@@ -54,7 +56,7 @@ site_up() { # site_up <bb|bp> <table prefix>
     # the component list to its defaults (without Groups).
     wp_site bb eval 'bp_version_updater();'
     bb_components
-    wp_site bb eval 'require_once WP_PLUGIN_DIR . "/buddyboss-platform/bp-core/admin/bp-core-admin-schema.php"; bp_core_install(); bp_core_install_invitations();'
+    wp_site bb eval 'require_once WP_PLUGIN_DIR . "/buddyboss-platform/bp-core/admin/bp-core-admin-schema.php"; bp_core_install(); bp_core_install_invitations(); bp_core_add_page_mappings(bp_get_option("bp-active-components"), "keep");'
   else
     wp_site bp plugin install buddypress --activate --quiet
     wp_site bp bp component activate activity --quiet
@@ -64,10 +66,14 @@ site_up() { # site_up <bb|bp> <table prefix>
   wp_site "$site" plugin activate buddyboss-community-pulse --quiet
 }
 
-# Enable the components the plugin needs (BuddyBoss's defaults leave Groups off).
+# Enable the components the plugin needs. BuddyBoss 3.x keeps the source of truth in
+# bb-active-features and re-syncs bp-active-components from it on wp-admin requests, so both
+# options must include Groups (setting only bp-active-components is undone on the first admin visit).
 bb_components() {
-  wp_site bb option update bp-active-components \
-    '{"activity":1,"groups":1,"members":1,"xprofile":1,"settings":1,"notifications":1}' --format=json --quiet
+  wp_site bb eval '
+    foreach (["bb-active-features", "bp-active-components"] as $o) {
+      bp_update_option($o, array_merge((array) bp_get_option($o, []), ["activity" => 1, "groups" => 1, "members" => 1, "settings" => 1, "notifications" => 1]));
+    }'
 }
 
 case "${1:-}" in
@@ -86,6 +92,7 @@ case "${1:-}" in
     echo "http://127.0.0.1:$port/wp-admin/tools.php?page=community-pulse  (admin / fixture-only)"
     exec php -S "127.0.0.1:$port" -t "$DIR/bb"
     ;;
+  demo) db_up; bb_components; wp_site bb eval-file "$ROOT/scripts/seed-demo.php" ;;
   test)
     db_up; bb_components
     php "$ROOT/tests/unit.php"
@@ -95,5 +102,5 @@ case "${1:-}" in
     [[ -f "$DIR/db.pid" ]] && kill "$(cat "$DIR/db.pid")" 2>/dev/null || true
     sleep 1; rm -rf "$DIR"; rm -f "$SOCK"; echo "Removed $DIR"
     ;;
-  *) sed -n '2,13p' "$0"; exit 1 ;;
+  *) sed -n '2,15p' "$0"; exit 1 ;;
 esac
